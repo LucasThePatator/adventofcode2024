@@ -8,38 +8,30 @@ def parse_inputs():
     else :
         data_file_name = "data/1"
 
-    ll = []
-    lr = []
-
     with open(data_file_name, 'r') as data_file:
-        file_content = data_file.read()
-        lines = file_content.split('\n')
-        for l in lines:
-            tokens = l.split('  ')
-            ll.append(int(tokens[0]))
-            lr.append(int(tokens[1]))
+        data = np.genfromtxt(data_file, dtype=np.int32)
 
-    return ll, lr
+    return data
 
 def first():
-    ll, lr = parse_inputs()
+    data = parse_inputs()
+ 
+    data[:, 0].sort()
+    data[:, 1].sort()
 
-    ll.sort()
-    lr.sort()
-
-    ll = np.array(ll)
-    lr = np.array(lr)
-
-    print(np.sum(np.abs(lr-ll)))
+    print(np.sum(np.abs(data[:, 0]- data[:, 1])))
 
 def second():
-    ll, lr = parse_inputs()
+    data = parse_inputs()
 
     total = 0
+    ll = list(data[:, 0])
+    lr = list(data[:, 1])
     for n in ll:
         total += n*lr.count(n)
 
     print(total)
 
 if __name__ == "__main__":
+    first()
     second()
