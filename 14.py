@@ -1,4 +1,4 @@
-
+# %%
 import numpy as np
 from matplotlib import pyplot as plt
 import matplotlib.animation as animation
@@ -16,6 +16,7 @@ def parse_inputs():
     else :
         data_file_name = "data/14"
         width, height = 101, 103
+
 
     positions = []
     speeds = []
@@ -75,6 +76,12 @@ def second(data):
     print(tree_i + 1)
 
 if __name__ == "__main__":
+
     data = parse_inputs()
+# %%
     first(data)
+# %%
     second(data)
+
+
+# %%

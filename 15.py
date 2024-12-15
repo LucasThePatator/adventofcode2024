@@ -3,7 +3,7 @@ import numpy as np
 from tqdm import trange
 from functools import cache, lru_cache
 import cv2 as cv
-test = True
+test = False
 
 def parse_inputs():
     if test:
@@ -19,6 +19,7 @@ def parse_inputs():
         for line in board.split('\n'):
             if line == '\n':
                 continue
+
             line = line.replace('#', '##')
             line = line.replace('O', '[]')
             line = line.replace('.', '..')
@@ -51,12 +52,12 @@ def can_move_1(board, row, col, direction, preceding):
         return False
     elif board[new_row][new_col] == 'O':
         preceding.append((new_row, new_col))
-        return can_move(board, new_row, new_col, direction, preceding)
+        return can_move_1(board, new_row, new_col, direction, preceding)
     elif board[new_row][new_col] == '.':
         preceding.append((new_row, new_col))
         return True
 
-def compute_score(board):
+def compute_score_1(board):
     boxes = np.argwhere(board == 'O')
     return np.sum(100*boxes[:, 0] + boxes[:, 1])
 
@@ -78,9 +79,13 @@ def first(data):
             print(board)
             pass
 
-    print(compute_score(board))
+    print(compute_score_1(board))
 
-def can_move_2(board, row, col, direction, to_move):
+
+to_move = []
+
+def can_move_2(board, row, col, direction):
+    global to_move
     if direction == '^':
         new_row, new_col = row - 1, col
     elif direction == '>':
@@ -95,7 +100,7 @@ def can_move_2(board, row, col, direction, to_move):
             return False
         elif board[new_row][new_col] == '[' or  board[new_row][new_col] == ']':
             to_move.append((new_row, new_col))
-            return can_move_2(board, new_row, new_col, direction, to_move)
+            return can_move_2(board, new_row, new_col, direction)
         elif board[new_row][new_col] == '.':
             to_move.append((new_row, new_col))
             return True
@@ -106,12 +111,13 @@ def can_move_2(board, row, col, direction, to_move):
         elif board[new_row][new_col] == ']':
             to_move.append((new_row, new_col))
             to_move.append((new_row, new_col-1))
-            return can_move_2(board, new_row, new_col, direction, to_move) and can_move_2(board, new_row, new_col-1, direction, to_move)
+            return can_move_2(board, new_row, new_col, direction) and can_move_2(board, new_row, new_col-1, direction)
         elif board[new_row][new_col] == '[':
             to_move.append((new_row, new_col))
             to_move.append((new_row, new_col + 1))
-            return can_move_2(board, new_row, new_col, direction, to_move) and can_move_2(board, new_row, new_col+1, direction, to_move)
+            return can_move_2(board, new_row, new_col, direction) and can_move_2(board, new_row, new_col+1, direction)
         elif board[new_row][new_col] == '.':
+            to_move.append((new_row, new_col))
             return True
 
 def get_next(position, direction):
@@ -148,13 +154,22 @@ def move_boxes(board, positions, direction):
     new_board = np.copy(board)
     positions = sort_positions(positions, direction)
     for p in positions:
-        prec = get_precursor(p, direction)
-        new_board[p] = board[prec[0],prec[1]]
-        new_board[prec[0],prec[1]]='.'
+        if board[p] == '.':
+            continue
 
+        n = get_next(p, direction)
+        new_board[n[0], n[1]] = board[p]
+        new_board[p]='.'
+        #print(new_board)
+        pass
     return new_board
 
+def compute_score_2(board):
+    boxes = np.argwhere(board == '[')
+    return np.sum(100*boxes[:, 0] + boxes[:, 1])
+
 def second(data):
+    global to_move 
     board, commands = data
     pos = get_start_pos(board)
     np.set_printoptions(linewidth = 120)
@@ -163,15 +178,15 @@ def second(data):
     for c in commands:
         row, col = pos
         to_move = []
-        if can_move_2(board, row, col, c, to_move):    
+        if can_move_2(board, row, col, c):    
             board = move_boxes(board, to_move, c)
             pos = get_next(pos, c)
             board[pos[0], pos[1]] = '@'
             board[row, col] = '.'
-            print(board)
+            #print(board)
             pass
 
-    print(compute_score(board))
+    print(compute_score_2(board))
 
 if __name__ == "__main__":
     data = parse_inputs()
